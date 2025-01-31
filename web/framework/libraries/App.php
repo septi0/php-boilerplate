@@ -2,19 +2,27 @@
 
 class App
 {
-    public $router;
+    private $app_path;
+    private $router;
+    private $config;
+
     public $template;
     public $session;
+    public $di;
 
-    public function __construct($app_path)
+    public function __construct($app_path, $di)
     {
         $router = new Router($app_path . '/controllers/', 'p');
 
         require_once $app_path . '/routes.php';
 
+        $this->app_path = $app_path;
         $this->router = $router;
+        $this->config = require $app_path . '/config.php';
+
         $this->template = new Template($app_path . '/views/');
-        $this->session = new Session('APP_SESS');
+        $this->session = new Session($this->getConfig('sess_name', 'SESSID'));
+        $this->di = $di;
     }
 
     public function run()
@@ -48,6 +56,11 @@ class App
         $response = $this->router->dispatch($request, $this);
 
         (new ResponseEmitter())->emit($response);
+    }
+
+    public function getConfig($key, $default = null)
+    {
+        return $this->config[$key] ?? $default;
     }
 
     private function buildUri()

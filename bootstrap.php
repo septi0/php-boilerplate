@@ -1,9 +1,19 @@
 <?php
 
-// define environment
-if (!defined('ENVIRONMENT')) {
-    define('ENVIRONMENT', 'development');
+// load .env file
+if (file_exists(__DIR__ . '/.env')) {
+    $env = file_get_contents(__DIR__ . '/.env');
+    $env = explode("\n", $env);
+
+    foreach ($env as $line) {
+        if (strpos($line, '=') !== false) {
+            putenv($line);
+        }
+    }
 }
+
+// define environment
+define('ENVIRONMENT', getenv('APP_ENV') ?: 'development');
 
 // set error reporting
 if (defined('ENVIRONMENT')) {
@@ -24,8 +34,25 @@ if (defined('ENVIRONMENT')) {
 
 date_default_timezone_set('Europe/Bucharest');
 
-// libraries spl autoloader
+// autoload classes from libraries and services
 spl_autoload_register(function ($class) {
+    $directories = [
+        __DIR__ . '/libraries/',
+        __DIR__ . '/services/',
+    ];
+
     $class = str_replace('\\', '/', $class);
-    require_once __DIR__ . '/libraries/' . $class . '.php';
+
+    foreach ($directories as $directory) {
+        $file = $directory . $class . '.php';
+
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
+    }
 });
+
+$di = new DI(require __DIR__ . '/di.php');
+
+return $di;
