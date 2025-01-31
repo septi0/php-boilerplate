@@ -34,11 +34,11 @@ class Session
         $this->sess_data = $_SESSION;
 
         // regenerate session every x min
-        if (!$this->getProp('created')) {
-            $this->setProp('created', time());
-        } elseif (time() - $this->getProp('created') > (60 * $this->sess_regen)) {
+        if (!$this->get('created')) {
+            $this->set('created', time());
+        } elseif (time() - $this->get('created') > (60 * $this->sess_regen)) {
             session_regenerate_id(true);
-            $this->setProp('created', time());
+            $this->set('created', time());
         }
 
         $this->sess_started = true;
@@ -50,7 +50,7 @@ class Session
 
         // write username to session
         foreach ($details as $key => $value) {
-            $this->setProp($key, $value);
+            $this->set($key, $value);
         }
 
         return true;
@@ -68,12 +68,12 @@ class Session
         return true;
     }
 
-    public function getProp($prop_key)
+    public function get($prop_key, $default = null)
     {
-        return isset($this->sess_data[$prop_key]) ? $this->sess_data[$prop_key] : null;
+        return isset($this->sess_data[$prop_key]) ? $this->sess_data[$prop_key] : $default;
     }
 
-    public function setProp($prop_key, $prop_value)
+    public function set($prop_key, $prop_value)
     {
         if (!$this->sess_started) return false;
 

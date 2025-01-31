@@ -2,4 +2,4 @@
 
 $router->middleware('SessionMiddleware');
 
-$router->get('/', 'IndexCtrl');
+$router->get('home', '/', 'IndexCtrl');

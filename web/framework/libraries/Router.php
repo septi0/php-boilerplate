@@ -20,27 +20,27 @@ class Router
         $this->middlewares[] = $middleware;
     }
 
-    public function get($match, $controller, $action = 'index', $middlewares = [])
+    public function get($name, $match, $controller, $action = 'index', $middlewares = [])
     {
-        $this->register($match, 'GET', $controller, $action, $middlewares);
+        $this->register($name, $match, 'GET', $controller, $action, $middlewares);
     }
 
-    public function post($match, $controller, $action = 'index', $middlewares = [])
+    public function post($name, $match, $controller, $action = 'index', $middlewares = [])
     {
         $this->register($match, 'POST', $controller, $action, $middlewares);
     }
 
-    public function register($match, $method, $controller, $action = 'index', $middlewares = [])
+    public function register($name, $match, $method, $controller, $action = 'index', $middlewares = [])
     {
         if (is_array($match)) {
             if (count($match) != 2) {
                 throw new Exception('Invalid route');
             }
 
-            $this->routes_map['path'][$match[0]][$method] = new Route('path', $match[0], $method, $controller, $action, $middlewares);
-            $this->routes_map['query'][$match[1]][$method] = new Route('query', $match[1], $method, $controller, $action, $middlewares);
+            $this->routes_map['path'][$match[0]][$method] = new Route($name, 'path', $match[0], $method, $controller, $action, $middlewares);
+            $this->routes_map['query'][$match[1]][$method] = new Route($name, 'query', $match[1], $method, $controller, $action, $middlewares);
         } else {
-            $this->routes_map['path'][$match[0]][$method] = new Route('path', $match, $method, $controller, $action, $middlewares);
+            $this->routes_map['path'][$match][$method] = new Route($name, 'path', $match, $method, $controller, $action, $middlewares);
         }
     }
 
@@ -57,16 +57,18 @@ class Router
             if (isset($this->routes_map['query'][$query][$request_method]) && $path == '/') {
                 $route = $this->routes_map['query'][$query][$request_method];
             } else {
-                $route = new Route('query', $query, $request_method, 'ErrorCtrl', 'notFound');
+                $route = new Route('not_found', 'query', $query, $request_method, 'ErrorCtrl', 'notFound');
             }
         } else {
             // attempt to route based on path
             if (isset($this->routes_map['path'][$path][$request_method])) {
                 $route = $this->routes_map['path'][$path][$request_method];
             } else {
-                $route = new Route('path', $path, $request_method, 'ErrorCtrl', 'notFound');
+                $route = new Route('not_found', 'path', $path, $request_method, 'ErrorCtrl', 'notFound');
             }
         }
+
+        $request = $request->withAttribute('route', $route->name);
 
         return $this->dispatchRoute($route, $app, $request);
     }
@@ -125,7 +127,8 @@ class Router
         };
     }
 
-    private function runMiddlewares($middlewares, $app, $request) {
+    private function runMiddlewares($middlewares, $app, $request)
+    {
         $middlewares = array_reverse($middlewares);
 
         $last = null;

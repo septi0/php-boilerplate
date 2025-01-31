@@ -2,6 +2,7 @@
 
 class Route
 {
+    private $name;
     private $type;
     private $match;
     private $method;
@@ -9,8 +10,9 @@ class Route
     private $action;
     private $middlewares = [];
 
-    public function __construct($type, $match, $method, $controller, $action, $middlewares = [])
+    public function __construct($name, $type, $match, $method, $controller, $action, $middlewares = [])
     {
+        $this->name = $name;
         $this->type = $type;
         $this->match = $match;
         $this->method = $method;

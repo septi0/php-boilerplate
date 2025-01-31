@@ -11,6 +11,8 @@ class App
     public $template;
     public $session;
     public $di;
+    public $user_id;
+    public $user_role;
 
     public function __construct($app_path, $di)
     {
@@ -73,6 +75,17 @@ class App
         return $this->config[$key] ?? $default;
     }
 
+    public function getUserdata($key, $default = null)
+    {
+        return $this->session->get($key, $default);
+    }
+
+    public function setUser($user_id, $role)
+    {
+        $this->user_id = $user_id;
+        $this->user_role = $role;
+    }
+
     private function buildUri()
     {
         $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
@@ -102,5 +115,4 @@ class App
             throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
         });
     }
-
 }
