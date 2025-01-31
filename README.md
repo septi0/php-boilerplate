@@ -10,6 +10,7 @@ A simple PHP Boilerplate to easily start a new project without external dependen
 - Routing
 - Sessions
 - PSR-7 compatible request and response objects
+- Dependency Injection
 
 ## Software requirements
 
