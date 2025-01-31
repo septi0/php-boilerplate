@@ -53,6 +53,8 @@ spl_autoload_register(function ($class) {
     }
 });
 
-$di = new DI(require __DIR__ . '/di.php');
+$di = new DI();
+
+require_once __DIR__ . '/di.php';
 
 return $di;
