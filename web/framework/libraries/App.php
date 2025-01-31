@@ -6,6 +6,8 @@ class App
     private $router;
     private $config;
 
+    private $app_started = false;
+
     public $template;
     public $session;
     public $di;
@@ -27,6 +29,14 @@ class App
 
     public function run()
     {
+        if ($this->app_started) {
+            return;
+        }
+
+        $this->app_started = true;
+
+        $this->bindErrorHandlers();
+
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $uri = $this->buildUri();
         $headers = $this->getHeaders();
@@ -85,4 +95,12 @@ class App
 
         return $headers;
     }
+
+    private function bindErrorHandlers()
+    {
+        set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+            throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+        });
+    }
+
 }

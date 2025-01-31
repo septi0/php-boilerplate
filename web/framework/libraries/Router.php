@@ -73,8 +73,10 @@ class Router
 
     private function dispatchRoute($route, $app, $request)
     {
+        $middlewares = [];
+
         // add app specific middlewares
-        $middlewares = $this->middlewares;
+        $middlewares = array_merge($middlewares, $this->middlewares);
         // add route specific middlewares 
         $middlewares = array_merge($middlewares, $route->middlewares);
         // add controller middleware
