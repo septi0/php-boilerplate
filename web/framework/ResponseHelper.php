@@ -9,9 +9,20 @@ class ResponseHelper
         $this->base_url = $base_url;
     }
 
-    public function redirect($response, $url, $status = 302)
+    public function redirect($response, $location, $status = 302)
     {
-        $redirect_location = $this->base_url . $url;
+        if (!$location) {
+            throw new Exception('Redirect location not provided');
+        }
+
+        // location can be an absolute path, a full URL, or a route name
+        if (strpos($location, 'http') === 0) {
+            $url = $location;
+        } elseif (strpos($location, '/') === 0) {
+            $url = $this->base_url . $location;
+        }
+
+        $redirect_location = $url;
         $redirect_location = preg_replace('/\/+/', '/', $redirect_location);
 
         return $response->withStatus($status)->withHeader('Location', $redirect_location);
