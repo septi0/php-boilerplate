@@ -13,7 +13,7 @@ class IndexCtrl
     {
         $context = [];
 
-        $html = $this->app->template->renderPage($response, 'home', $context);
+        $html = $this->app->template->renderPage('home', $context);
         return $this->app->response_helper->html($response, $html);
     }
 }
