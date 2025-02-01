@@ -12,9 +12,9 @@ class ErrorCtrl
     public function notFound($request, $response)
     {
         if ($request->getHeader('Accept') == 'application/json') {
-            return $response->withBody(['error' => 'The requested resource was not found'])->withStatus(404)->withHeader('Content-Type', 'application/json');
+            return $this->app->response_helper->json($response, ['error' => 'The requested resource was not found'], 404);
         } else {
-            return $response->withBody('404 Not Found')->withStatus(404);
+            return $this->app->response_helper->html($response, '404 Not Found', 404);
         }
     }
 }

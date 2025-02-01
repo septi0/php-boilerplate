@@ -11,6 +11,9 @@ class IndexCtrl
 
     public function index($request, $response)
     {
-        return $this->app->template->renderPage($response, 'home');
+        $context = [];
+
+        $html = $this->app->template->renderPage($response, 'home', $context);
+        return $this->app->response_helper->html($response, $html);
     }
 }

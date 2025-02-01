@@ -3,18 +3,16 @@
 class Route
 {
     private $name;
-    private $type;
-    private $match;
+    private $path;
     private $method;
     private $controller;
     private $action;
     private $middlewares = [];
 
-    public function __construct($name, $type, $match, $method, $controller, $action, $middlewares = [])
+    public function __construct($name, $path, $method, $controller, $action, $middlewares = [])
     {
         $this->name = $name;
-        $this->type = $type;
-        $this->match = $match;
+        $this->path = $path;
         $this->method = $method;
         $this->controller = $controller;
         $this->action = $action;

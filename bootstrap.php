@@ -13,7 +13,7 @@ if (file_exists(__DIR__ . '/.env')) {
 }
 
 // define environment
-define('ENVIRONMENT', getenv('APP_ENV') ?: 'development');
+define('ENVIRONMENT', getenv('ENVIRONMENT') ?: 'development');
 
 // set error reporting
 if (defined('ENVIRONMENT')) {
@@ -21,24 +21,31 @@ if (defined('ENVIRONMENT')) {
         case 'development':
             error_reporting(E_ALL);
             ini_set('display_errors', 1);
+            ini_set('display_startup_errors', 1);
+            ini_set('log_errors', 1);
             break;
         case 'testing':
         case 'production':
-            error_reporting(0);
+            error_reporting(E_ALL);
             ini_set('display_errors', 0);
+            ini_set('display_startup_errors', 0);
+            ini_set('log_errors', 1);
             break;
         default:
             exit('The application environment is not set correctly.');
     }
 }
 
-date_default_timezone_set('Europe/Bucharest');
+if (getenv('TZ')) {
+    date_default_timezone_set(getenv('TZ'));
+}
 
 // autoload classes from libraries and services
 spl_autoload_register(function ($class) {
     $directories = [
         __DIR__ . '/libraries/',
         __DIR__ . '/services/',
+        __DIR__ . '/models/',
     ];
 
     $class = str_replace('\\', '/', $class);

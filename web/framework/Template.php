@@ -17,7 +17,7 @@ class Template
         $this->global_context[$key] = $value;
     }
 
-    public function renderPage($response, $page, $context = [], $layout = '')
+    public function renderPage($page, $context = [], $layout = '')
     {
         $layout_name = $layout ?: $this->default_layout;
 
@@ -27,7 +27,7 @@ class Template
         ];
 
         $content = $this->renderPartial($layout_name, $layout_context);
-        return $response->withBody($content);
+        return $content;
     }
 
     public function renderPartial($template_name, $context = [])

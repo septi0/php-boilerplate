@@ -37,10 +37,12 @@ class Router
                 throw new Exception('Invalid route');
             }
 
-            $this->routes_map['path'][$match[0]][$method] = new Route($name, 'path', $match[0], $method, $controller, $action, $middlewares);
-            $this->routes_map['query'][$match[1]][$method] = new Route($name, 'query', $match[1], $method, $controller, $action, $middlewares);
+            $route = new Route($name, $match[0], $method, $controller, $action, $middlewares);
+
+            $this->routes_map['path'][$match[0]][$method] = $route;
+            $this->routes_map['query'][$match[1]][$method] = $route;
         } else {
-            $this->routes_map['path'][$match][$method] = new Route($name, 'path', $match, $method, $controller, $action, $middlewares);
+            $this->routes_map['path'][$match][$method] = new Route($name, $match, $method, $controller, $action, $middlewares);
         }
     }
 
@@ -57,20 +59,25 @@ class Router
             if (isset($this->routes_map['query'][$query][$request_method]) && $path == '/') {
                 $route = $this->routes_map['query'][$query][$request_method];
             } else {
-                $route = new Route('not_found', 'query', $query, $request_method, 'ErrorCtrl', 'notFound');
+                $route = new Route('not-found', $query, $request_method, 'ErrorCtrl', 'notFound');
             }
         } else {
             // attempt to route based on path
             if (isset($this->routes_map['path'][$path][$request_method])) {
                 $route = $this->routes_map['path'][$path][$request_method];
             } else {
-                $route = new Route('not_found', 'path', $path, $request_method, 'ErrorCtrl', 'notFound');
+                $route = new Route('not-found', $path, $request_method, 'ErrorCtrl', 'notFound');
             }
         }
 
-        $request = $request->withAttribute('route', $route->name);
+        $request = $request->withAttribute('route', $route->name)->withAttribute('route_path', $route->path);
 
         return $this->dispatchRoute($route, $app, $request);
+    }
+
+    public function getRoute($name, $type = 'path', $method = 'GET')
+    {
+        return $this->routes_map[$type][$name][$method] ?? null;
     }
 
     private function dispatchRoute($route, $app, $request)

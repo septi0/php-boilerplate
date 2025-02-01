@@ -19,8 +19,15 @@ class ResponseHelper
 
     public function json($response, $data, $status = 200)
     {
-        $response->getBody()->write(json_encode($data));
+        return $response->withBody(json_encode($data))->withHeader('Content-Type', 'application/json')->withStatus($status);
+    }
 
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
+    public function html($response, $data, $status = 200)
+    {
+        if (!$response) {
+            $response = new Response();
+        }
+
+        return $response->withBody($data)->withHeader('Content-Type', 'text/html')->withStatus($status);
     }
 }

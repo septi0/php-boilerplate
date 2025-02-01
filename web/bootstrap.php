@@ -1,6 +1,6 @@
 <?php
 
-$app_path = __DIR__ . '/../app/';
+$app_path = __DIR__ . '/app/';
 
 require $app_path . '/autoload.php';
 
@@ -18,7 +18,7 @@ $core = [
 ];
 
 foreach ($core as $class) {
-    require_once __DIR__ . '/libraries/' . $class . '.php';
+    require_once __DIR__ . '/framework/' . $class . '.php';
 }
 
 foreach ($middlewares as $middleware) {

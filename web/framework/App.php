@@ -28,7 +28,7 @@ class App
 
         $this->template = new Template($app_path . '/views/');
         $this->session = new Session($this->getConfig('sess_name', 'SESSID'));
-        $this->response_helper = new ResponseHelper($this->getConfig('base_url', '/'));
+        $this->response_helper = new ResponseHelper($this->baseUrl());
         $this->di = $di;
     }
 
@@ -87,6 +87,12 @@ class App
     {
         $this->user_id = $user_id;
         $this->user_role = $role;
+    }
+
+    public function baseUrl($path = '')
+    {
+        $base_url = $this->getConfig('base_url', '/');
+        return rtrim($base_url, '/') . '/' . ltrim($path, '/');
     }
 
     private function buildUri()
