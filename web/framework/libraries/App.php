@@ -10,7 +10,9 @@ class App
 
     public $template;
     public $session;
+    public $response_helper;
     public $di;
+
     public $user_id;
     public $user_role;
 
@@ -26,6 +28,7 @@ class App
 
         $this->template = new Template($app_path . '/views/');
         $this->session = new Session($this->getConfig('sess_name', 'SESSID'));
+        $this->response_helper = new ResponseHelper($this->getConfig('base_url', '/'));
         $this->di = $di;
     }
 

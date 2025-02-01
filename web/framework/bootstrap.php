@@ -11,6 +11,7 @@ $core = [
     'Message',
     'Request',
     'Response',
+    'ResponseHelper',
     'ResponseEmitter',
     'Template',
     'Session',

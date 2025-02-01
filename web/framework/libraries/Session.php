@@ -30,6 +30,8 @@ class Session
             if (session_status() == PHP_SESSION_NONE) session_start();
         }
 
+        $this->sess_started = true;
+
         // store session data
         $this->sess_data = $_SESSION;
 
@@ -40,8 +42,6 @@ class Session
             session_regenerate_id(true);
             $this->set('created', time());
         }
-
-        $this->sess_started = true;
     }
 
     public function createSession($details)

@@ -27,7 +27,7 @@ class Router
 
     public function post($name, $match, $controller, $action = 'index', $middlewares = [])
     {
-        $this->register($match, 'POST', $controller, $action, $middlewares);
+        $this->register($name, $match, 'POST', $controller, $action, $middlewares);
     }
 
     public function register($name, $match, $method, $controller, $action = 'index', $middlewares = [])
