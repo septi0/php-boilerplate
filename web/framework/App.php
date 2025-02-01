@@ -83,6 +83,11 @@ class App
         return $this->session->get($key, $default);
     }
 
+    public function setUserData($key, $value)
+    {
+        $this->session->set($key, $value);
+    }
+
     public function setUser($user_id, $role)
     {
         $this->user_id = $user_id;
