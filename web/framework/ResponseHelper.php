@@ -20,6 +20,8 @@ class ResponseHelper
             $url = $location;
         } elseif (strpos($location, '/') === 0) {
             $url = $this->base_url . $location;
+        } else {
+            throw new Exception('Invalid redirect location');
         }
 
         $redirect_location = $url;
