@@ -1,35 +1,37 @@
 <?php
 
+#[AllowDynamicProperties]
 class App
 {
     private $app_path;
-    private $router;
     private $config;
-
     private $app_started = false;
 
+    public $di;
+    public $router;
     public $template;
     public $session;
-    public $response_helper;
-    public $di;
 
+    // shortcut to access user data
     public $user_id;
     public $user_role;
 
     public function __construct($app_path, $di)
     {
-        $router = new Router($app_path . '/controllers/', 'p');
-
-        require_once $app_path . '/routes.php';
-
         $this->app_path = $app_path;
-        $this->router = $router;
         $this->config = require $app_path . '/config.php';
 
+        $router = new Router($app_path . '/controllers/', $app_path . '/middlewares/', $this->getConfig('route_qs', []));
+
+        require $app_path . '/routes.php';
+
+        $this->di = $di;
+        $this->router = $router;
         $this->template = new Template($app_path . '/views/');
         $this->session = new Session($this->getConfig('sess_name', 'SESSID'));
-        $this->response_helper = new ResponseHelper($this->baseUrl());
-        $this->di = $di;
+
+        $autoload = require $app_path . '/autoload.php';
+        $this->autoload($autoload);
     }
 
     public function run()
@@ -43,28 +45,37 @@ class App
         $this->bindErrorHandlers();
 
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri = $this->buildUri();
-        $headers = $this->getHeaders();
+        $uri = new Uri($_SERVER);
+        $serverParams = $_SERVER;
+        $queryParams = $_GET;
+        $cookieParams = $_COOKIE;
+        $uploadedFiles = $_FILES;
+        $parsedBody = $_POST ?: null;
         $body = fopen('php://input', 'r');
-        $query_params = $_GET ?? [];
-        $cookie_params = $_COOKIE ?? [];
-        $server_params = $_SERVER ?? [];
-        $files = $_FILES ?? [];
-        $parsed_body = $_POST ?? [];
+        $protocolVersion = isset($_SERVER['SERVER_PROTOCOL']) ? str_replace('HTTP/', '', $_SERVER['SERVER_PROTOCOL']) : '1.1';
         $attributes = [
             'path_info' => $_SERVER['PATH_INFO'] ?? '/',
         ];
+        $headers = [];
 
-        $request = new Request(
+        foreach ($_SERVER as $key => $value) {
+            if (strpos($key, 'HTTP_') === 0) {
+                $header_name = str_replace('_', '-', strtolower(substr($key, 5)));
+                $headers[$header_name] = $value;
+            }
+        }
+
+        $request = new ServerRequest(
             $method,
             $uri,
             $headers,
             $body,
-            $query_params,
-            $cookie_params,
-            $server_params,
-            $files,
-            $parsed_body,
+            $protocolVersion,
+            $serverParams,
+            $queryParams,
+            $cookieParams,
+            $uploadedFiles,
+            $parsedBody,
             $attributes
         );
 
@@ -100,27 +111,16 @@ class App
         return rtrim($base_url, '/') . '/' . ltrim($path, '/');
     }
 
-    private function buildUri()
+    public function autoload($autoload)
     {
-        $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $request_uri = $_SERVER['REQUEST_URI'] ?? '/';
+        if (isset($autoload['helpers'])) {
+            foreach ($autoload['helpers'] as $helper) {
+                require_once $this->app_path . '/helpers/' . $helper . '.php';
 
-        return $scheme . '://' . $host . $request_uri;
+                $helper_name = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $helper));
+                $this->{$helper_name} = new $helper($this);
     }
-
-    private function getHeaders()
-    {
-        $headers = [];
-
-        foreach ($_SERVER as $key => $value) {
-            if (strpos($key, 'HTTP_') === 0) {
-                $headerName = str_replace('_', '-', strtolower(substr($key, 5)));
-                $headers[$headerName] = [$value];
-            }
         }
-
-        return $headers;
     }
 
     private function bindErrorHandlers()

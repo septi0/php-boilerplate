@@ -46,9 +46,12 @@ class Session
 
     public function createSession($details)
     {
-        if (!$this->sess_started) return false;
+        if (!$this->sess_started) {
+            throw new Exception('Session not started');
+        }
 
-        // write username to session
+        $this->destroySession();
+
         foreach ($details as $key => $value) {
             $this->set($key, $value);
         }
@@ -58,7 +61,9 @@ class Session
 
     public function destroySession()
     {
-        if (!$this->sess_started) return false;
+        if (!$this->sess_started) {
+            throw new Exception('Session not started');
+        }
 
         session_destroy();
         session_unset();
@@ -75,7 +80,9 @@ class Session
 
     public function set($prop_key, $prop_value)
     {
-        if (!$this->sess_started) return false;
+        if (!$this->sess_started) {
+            throw new Exception('Session not started');
+        }
 
         $_SESSION[$prop_key] = $prop_value;
         $this->sess_data[$prop_key] = $prop_value;

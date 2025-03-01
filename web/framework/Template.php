@@ -32,9 +32,8 @@ class Template
 
     public function renderPartial($template_name, $context = [])
     {
-        $context = array_merge($this->global_context, $context);
-        extract($context, EXTR_PREFIX_ALL, 'ctx');
-        unset($context);
+        $l = (object)$context;
+        $g = (object)$this->global_context;
 
         ob_start();
         require $this->views_path . '/' . $template_name . '.php';

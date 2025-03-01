@@ -3,16 +3,19 @@
 class Router
 {
     private $controllers_path;
-    private $query_param;
+    private $middlewares_path;
+    private $route_qs;
 
+    private $routes;
     private $routes_map;
 
     private $middlewares = [];
 
-    public function __construct($controllers_path, $query_param = '')
+    public function __construct($controllers_path, $middlewares_path, $route_qs = '')
     {
         $this->controllers_path = $controllers_path;
-        $this->query_param = $query_param;
+        $this->middlewares_path = $middlewares_path;
+        $this->route_qs = $route_qs;
     }
 
     public function middleware($middleware)
@@ -20,30 +23,32 @@ class Router
         $this->middlewares[] = $middleware;
     }
 
-    public function get($name, $match, $controller, $action = 'index', $middlewares = [])
+    public function register($name, $match, $methods, $controller, $action = 'index')
     {
-        $this->register($name, $match, 'GET', $controller, $action, $middlewares);
+        if (is_string($match)) $match = [$match];
+        if (is_string($methods)) $methods = [$methods];
+
+        if (isset($this->routes[$name])) {
+            throw new Exception('Route already exists');
     }
 
-    public function post($name, $match, $controller, $action = 'index', $middlewares = [])
-    {
-        $this->register($name, $match, 'POST', $controller, $action, $middlewares);
-    }
-
-    public function register($name, $match, $method, $controller, $action = 'index', $middlewares = [])
-    {
-        if (is_array($match)) {
-            if (count($match) != 2) {
-                throw new Exception('Invalid route');
+        if (count($match) > 2) {
+            throw new Exception('Invalid match');
             }
 
-            $route = new Route($name, $match[0], $method, $controller, $action, $middlewares);
+        $route = new Route($name, $match[0], $controller, $action);
 
+        $this->routes[$name] = $route;
+
+        foreach($methods as $method) {
+            $method = strtoupper($method);
             $this->routes_map['path'][$match[0]][$method] = $route;
+            if (isset($match[1])) {
             $this->routes_map['query'][$match[1]][$method] = $route;
-        } else {
-            $this->routes_map['path'][$match][$method] = new Route($name, $match, $method, $controller, $action, $middlewares);
         }
+    }
+
+        return $route;
     }
 
     public function dispatch($request, $app)
@@ -52,9 +57,9 @@ class Router
         $query_params = $request->getQueryParams();
         $request_method = $request->getMethod();
 
-        if (isset($query_params[$this->query_param])) {
+        if (isset($query_params[$this->route_qs])) {
             // attempt to route based on query param
-            $query = $query_params[$this->query_param];
+            $query = $query_params[$this->route_qs];
 
             if (isset($this->routes_map['query'][$query][$request_method]) && $path == '/') {
                 $route = $this->routes_map['query'][$query][$request_method];
@@ -70,14 +75,23 @@ class Router
             }
         }
 
-        $request = $request->withAttribute('route', $route->name)->withAttribute('route_path', $route->path);
+        $request = $request->withAttribute('route', $route);
 
         return $this->dispatchRoute($route, $app, $request);
     }
 
-    public function getRoute($name, $type = 'path', $method = 'GET')
+    public function getRoute($name)
     {
-        return $this->routes_map[$type][$name][$method] ?? null;
+        return $this->routes[$name];
+    }
+
+    public function routeAllowed($name, $role)
+    {
+        if (!isset($this->routes[$name])) {
+            throw new Exception('Route not found');
+        }
+
+        return $this->routes[$name]->allowed($role);
     }
 
     private function dispatchRoute($route, $app, $request)
@@ -90,6 +104,8 @@ class Router
         $middlewares = array_merge($middlewares, $route->middlewares);
         // add controller middleware
         $middlewares[] = $this->genCoreMiddleware($route, $app);
+
+        $this->loadMiddlewares($middlewares);
 
         return $this->runMiddlewares($middlewares, $app, $request);
     }
@@ -132,6 +148,20 @@ class Router
                 return call_user_func_array([$controller_instance, $action], [$request, $response]);
             }
         };
+    }
+
+    private function loadMiddlewares($middlewares) {
+        foreach($middlewares as $middleware) {
+            if (is_string($middleware)) {
+                $middleware_path = $this->middlewares_path . '/' . $middleware . '.php';
+
+                if (!file_exists($middleware_path)) {
+                    throw new Exception("Middleware {$middleware} not found");
+                }
+
+                require_once $middleware_path;
+            }
+        }
     }
 
     private function runMiddlewares($middlewares, $app, $request)
