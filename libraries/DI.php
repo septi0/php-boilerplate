@@ -4,14 +4,13 @@ class Di
 {
     private $definitions = [];
 
-    public function set($name, $value, $singleton = false)
+    public function set($name, $value)
     {
         $is_callable = is_callable($value);
 
         $this->definitions[$name] = [
             'value' => $value,
             'callable' => $is_callable,
-            'singleton' => $is_callable && $singleton,
             'instance_cache' => null,
         ];
     }
@@ -26,14 +25,10 @@ class Di
             return $this->definitions[$name]['value'];
         }
 
-        if ($this->definitions[$name]['singleton']) {
-            if ($this->definitions[$name]['instance_cache'] === null) {
-                $this->definitions[$name]['instance_cache'] = $this->definitions[$name]['value']($this);
-            }
-
-            return $this->definitions[$name]['instance_cache'];
-        } else {
-            return $this->definitions[$name]['value']($this);
+        if ($this->definitions[$name]['instance_cache'] === null) {
+            $this->definitions[$name]['instance_cache'] = $this->definitions[$name]['value']($this);
         }
+
+        return $this->definitions[$name]['instance_cache'];
     }
 }

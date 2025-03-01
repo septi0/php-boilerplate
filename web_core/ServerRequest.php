@@ -1,5 +1,7 @@
 <?php
 
+namespace WebCore;
+
 class ServerRequest
 {
     private $method;
@@ -163,7 +165,7 @@ class ServerRequest
     public function withParsedBody($data)
     {
         if (!is_array($data) && !is_object($data) && $data !== null) {
-            throw new InvalidArgumentException('Parsed body must be array, object, or null');
+            throw new \InvalidArgumentException('Parsed body must be array, object, or null');
         }
 
         $new = clone $this;

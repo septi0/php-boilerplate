@@ -1,5 +1,7 @@
 <?php
 
+namespace WebCore;
+
 class Router
 {
     private $controllers_path;
@@ -29,11 +31,11 @@ class Router
         if (is_string($methods)) $methods = [$methods];
 
         if (isset($this->routes[$name])) {
-            throw new Exception('Route already exists');
+            throw new \Exception('Route already exists');
     }
 
         if (count($match) > 2) {
-            throw new Exception('Invalid match');
+            throw new \Exception('Invalid match');
             }
 
         $route = new Route($name, $match[0], $controller, $action);
@@ -88,7 +90,7 @@ class Router
     public function routeAllowed($name, $role)
     {
         if (!isset($this->routes[$name])) {
-            throw new Exception('Route not found');
+            throw new \Exception('Route not found');
         }
 
         return $this->routes[$name]->allowed($role);
@@ -132,7 +134,7 @@ class Router
                 $controller_path = $this->controllers_path . '/' . $controller . '.php';
 
                 if (!file_exists($controller_path)) {
-                    throw new Exception("Controller {$controller} not found");
+                    throw new \Exception("Controller {$controller} not found");
                 }
 
                 require_once $controller_path;
@@ -140,7 +142,7 @@ class Router
                 $controller_instance = new $controller($this->app);
 
                 if (!method_exists($controller_instance, $action)) {
-                    throw new Exception('Action not found');
+                    throw new \Exception('Action not found');
                 }
 
                 $response = new Response();
@@ -156,7 +158,7 @@ class Router
                 $middleware_path = $this->middlewares_path . '/' . $middleware . '.php';
 
                 if (!file_exists($middleware_path)) {
-                    throw new Exception("Middleware {$middleware} not found");
+                    throw new \Exception("Middleware {$middleware} not found");
                 }
 
                 require_once $middleware_path;
@@ -195,7 +197,7 @@ class Router
                         $callable = $this->middleware;
                         return $callable($request, $this->next);
                     } else {
-                        throw new Exception('Invalid middleware type');
+                        throw new \Exception('Invalid middleware type');
                     }
                 }
             };

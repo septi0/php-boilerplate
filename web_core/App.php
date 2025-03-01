@@ -1,6 +1,8 @@
 <?php
 
-#[AllowDynamicProperties]
+namespace WebCore;
+
+#[\AllowDynamicProperties]
 class App
 {
     private $app_path;
@@ -16,22 +18,22 @@ class App
     public $user_id;
     public $user_role;
 
-    public function __construct($app_path, $di)
+    public function __construct($di, $app_path)
     {
+        $this->di = $di;
         $this->app_path = $app_path;
-        $this->config = require $app_path . '/config.php';
+
+        $this->config = require $this->app_path . '/config.php';
 
         $router = new Router($app_path . '/controllers/', $app_path . '/middlewares/', $this->getConfig('route_qs', []));
 
         require $app_path . '/routes.php';
 
-        $this->di = $di;
         $this->router = $router;
         $this->template = new Template($app_path . '/views/');
         $this->session = new Session($this->getConfig('sess_name', 'SESSID'));
 
-        $autoload = require $app_path . '/autoload.php';
-        $this->autoload($autoload);
+        $this->autoload();
     }
 
     public function run()
@@ -111,22 +113,29 @@ class App
         return rtrim($base_url, '/') . '/' . ltrim($path, '/');
     }
 
-    public function autoload($autoload)
+    public function autoload()
     {
+        $autoload = require $this->app_path . '/autoload.php';
+
         if (isset($autoload['helpers'])) {
-            foreach ($autoload['helpers'] as $helper) {
+            $this->autoloadHelpers($autoload['helpers']);
+        }
+    }
+
+    public function autoloadHelpers($helpers)
+    {
+        foreach ($helpers as $helper) {
                 require_once $this->app_path . '/helpers/' . $helper . '.php';
 
                 $helper_name = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $helper));
                 $this->{$helper_name} = new $helper($this);
-    }
         }
     }
 
     private function bindErrorHandlers()
     {
         set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-            throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+            throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
         });
     }
 }

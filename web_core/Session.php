@@ -1,5 +1,7 @@
 <?php
 
+namespace WebCore;
+
 class Session
 {
     private $sess_name;
@@ -47,7 +49,7 @@ class Session
     public function createSession($details)
     {
         if (!$this->sess_started) {
-            throw new Exception('Session not started');
+            throw new \Exception('Session not started');
         }
 
         $this->destroySession();
@@ -62,7 +64,7 @@ class Session
     public function destroySession()
     {
         if (!$this->sess_started) {
-            throw new Exception('Session not started');
+            throw new \Exception('Session not started');
         }
 
         session_destroy();
@@ -81,7 +83,7 @@ class Session
     public function set($prop_key, $prop_value)
     {
         if (!$this->sess_started) {
-            throw new Exception('Session not started');
+            throw new \Exception('Session not started');
         }
 
         $_SESSION[$prop_key] = $prop_value;

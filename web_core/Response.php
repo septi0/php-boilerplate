@@ -1,5 +1,7 @@
 <?php
 
+namespace WebCore;
+
 class Response
 {
     private $statusCode;

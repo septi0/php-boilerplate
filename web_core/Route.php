@@ -1,5 +1,7 @@
 <?php
 
+namespace WebCore;
+
 class Route
 {
     private $name;
@@ -23,7 +25,7 @@ class Route
             return $this->$property;
         }
 
-        throw new Exception('Invalid property ' . $property);
+        throw new \Exception('Invalid property ' . $property);
     }
 
     public function middleware($middlewares)

@@ -1,5 +1,7 @@
 <?php
 
+namespace WebCore;
+
 class Message
 {
     protected $protocol_version = '1.1';
@@ -150,16 +152,16 @@ class Message
         $valid_protocol_versions = ['1.0', '1.1', '2'];
 
         if (!in_array($version, $valid_protocol_versions)) {
-            throw new InvalidArgumentException('Invalid HTTP version');
+            throw new \InvalidArgumentException('Invalid HTTP version');
         }
     }
 
     private function filterHeaderName($name)
     {
-        if (!is_string($name)) throw new InvalidArgumentException('Invalid header name type');
+        if (!is_string($name)) throw new \InvalidArgumentException('Invalid header name type');
 
         if (!preg_match('/^[a-zA-Z0-9\'`#$%&*+.^_|~!-]+$/', $name)) {
-            throw new InvalidArgumentException('Provided header name is not valid');
+            throw new \InvalidArgumentException('Provided header name is not valid');
         }
 
         return $name;
@@ -171,7 +173,7 @@ class Message
 
         foreach ($value as $a_value) {
             if (!is_string($a_value) && !is_numeric($a_value)) {
-                throw new InvalidArgumentException('Invalid header value type; must be a string or number');
+                throw new \InvalidArgumentException('Invalid header value type; must be a string or number');
             }
 
             // Look for:
@@ -179,7 +181,7 @@ class Message
             // \r not followed by \n, OR
             // \r\n not followed by space or horizontal tab; these are all CRLF attacks
             if (preg_match("#(?:(?:(?<!\r)\n)|(?:\r(?!\n))|(?:\r\n(?![ \t])))#", $a_value)) {
-                throw new InvalidArgumentException('Provided header value is not valid');
+                throw new \InvalidArgumentException('Provided header value is not valid');
             }
 
             // Non-visible, non-whitespace characters
@@ -190,7 +192,7 @@ class Message
             // 127 === DEL (disallowed)
             // 255 === null byte (disallowed)
             if (preg_match('/[^\x09\x0a\x0d\x20-\x7E\x80-\xFE]/', $a_value)) {
-                throw new InvalidArgumentException('Provided header value is not valid');
+                throw new \InvalidArgumentException('Provided header value is not valid');
             }
         }
 

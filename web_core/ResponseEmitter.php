@@ -1,5 +1,7 @@
 <?php
 
+namespace WebCore;
+
 class ResponseEmitter
 {
     public function emit($response)

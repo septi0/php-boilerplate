@@ -14,7 +14,8 @@ class ErrorCtrl
         if ($request->getHeader('Accept') == 'application/json') {
             return $this->app->response_helper->json($response, ['error' => 'The requested resource was not found'], 404);
         } else {
-            return $this->app->response_helper->html($response, '404 Not Found', 404);
+            $html = $this->app->template->renderPage('not_found');
+            return $this->app->response_helper->html($response, $html, 404);
         }
     }
 }

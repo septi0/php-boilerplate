@@ -1,5 +1,7 @@
 <?php
 
+namespace WebCore;
+
 class Template
 {
     private $views_path;
