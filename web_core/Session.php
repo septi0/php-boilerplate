@@ -6,7 +6,7 @@ class Session
 {
     private $sess_name;
     private $sess_started = false;
-    private $sess_lifetime = 15; // set session lifetime (in days)
+    private $sess_lifetime = 7; // set session lifetime (in days)
     private $sess_regen = 30; // set session regen time (in minutes)
 
     private $sess_data = [];
@@ -23,13 +23,20 @@ class Session
 
         // set session lifetime in days
         ini_set('session.cookie_lifetime', 60 * 60 * 24 * $this->sess_lifetime);
-        ini_set('session.gc-maxlifetime', 60 * 60 * 24 * $this->sess_lifetime);
+        ini_set('session.gc_maxlifetime', 60 * 60 * 24 * $this->sess_lifetime);
+        ini_set('session.gc_probability', 1);
+        ini_set('session.gc_divisor', 100);
+        ini_set('session.save_path', '/var/tmp/sessions');
+
+        $sess_options = [
+            'cookie_secure' => 1,
+        ];
 
         // start session (compatibility mode for old php and newer)
         if (version_compare(phpversion(), '5.4.0', '<')) {
-            if (session_id() == '') session_start();
+            if (session_id() == '') session_start($sess_options);
         } else {
-            if (session_status() == PHP_SESSION_NONE) session_start();
+            if (session_status() == PHP_SESSION_NONE) session_start($sess_options);
         }
 
         $this->sess_started = true;
