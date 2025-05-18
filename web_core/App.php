@@ -2,7 +2,14 @@
 
 namespace WebCore;
 
-#[\AllowDynamicProperties]
+class WebCoreException extends \Exception
+{
+    public function __construct($message = '', $code = 0, \Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
+}
+
 class App
 {
     private $app_path;
@@ -25,7 +32,7 @@ class App
 
         $this->config = require $this->app_path . '/config.php';
 
-        $router = new Router($app_path . '/controllers/', $app_path . '/middlewares/', $this->getConfig('route_qs', []));
+        $router = new Router($this->getConfig('route_qs', []));
 
         require $app_path . '/routes.php';
 
@@ -33,7 +40,7 @@ class App
         $this->template = new Template($app_path . '/views/');
         $this->session = new Session($this->getConfig('sess_name', 'SESSID'));
 
-        $this->autoload();
+        $this->autoloadRegister();
     }
 
     public function run()
@@ -113,23 +120,35 @@ class App
         return rtrim($base_url, '/') . '/' . ltrim($path, '/');
     }
 
-    public function autoload()
+    public function autoloadRegister()
     {
-        $autoload = require $this->app_path . '/autoload.php';
+        $autoload_dirs = [
+            $this->app_path . '/controllers/',
+            $this->app_path . '/handlers/',
+            $this->app_path . '/helpers/',
+            $this->app_path . '/middlewares/',
+        ];
 
-        if (isset($autoload['helpers'])) {
-            $this->autoloadHelpers($autoload['helpers']);
-        }
+        spl_autoload_register(function ($namespaced_class) use ($autoload_dirs) {
+            $namespaced_class = ltrim($namespaced_class, '\\');
+            $parts = explode('\\', $namespaced_class);
+
+            $class = array_pop($parts);
+            $namespace = implode('\\', $parts) ?: '\\';
+
+            if ($namespace) {
+
     }
 
-    public function autoloadHelpers($helpers)
-    {
-        foreach ($helpers as $helper) {
-                require_once $this->app_path . '/helpers/' . $helper . '.php';
+            foreach ($autoload_dirs as $directory) {
+                $file = $directory . $class . '.php';
 
-                $helper_name = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $helper));
-                $this->{$helper_name} = new $helper($this);
+                if (file_exists($file)) {
+                    require $file;
+                    return;
         }
+            }
+        });
     }
 
     private function bindErrorHandlers()

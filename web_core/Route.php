@@ -6,17 +6,15 @@ class Route
 {
     private $name;
     private $path;
-    private $controller;
-    private $action;
+    private $handler;
     private $middlewares = [];
     private $acl = [];
 
-    public function __construct($name, $path, $controller, $action)
+    public function __construct($name, $path, $handler)
     {
         $this->name = $name;
         $this->path = $path;
-        $this->controller = $controller;
-        $this->action = $action;
+        $this->handler = $handler;
     }
 
     public function __get($property)
@@ -25,7 +23,7 @@ class Route
             return $this->$property;
         }
 
-        throw new \Exception('Invalid property ' . $property);
+        throw new WebCoreException('Invalid property ' . $property);
     }
 
     public function middleware($middlewares)
