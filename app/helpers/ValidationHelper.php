@@ -2,15 +2,9 @@
 
 class ValidationHelper
 {
-    private $app;
-    private $empty_values = ['', null, false];
+    private static $empty_values = ['', null, false];
 
-    public function __construct($app)
-    {
-        $this->app = $app;
-    }
-
-    public function allowed($data, $fields)
+    public static function allowed($data, $fields)
     {
         foreach ($data as $key => $value) {
             if (!in_array($key, $fields)) {
@@ -21,10 +15,10 @@ class ValidationHelper
         return true;
     }
 
-    public function required($data, $fields)
+    public static function required($data, $fields)
     {
         foreach ($fields as $field) {
-            if (!isset($data[$field]) || in_array($data[$field], $this->empty_values, true)) {
+            if (!isset($data[$field]) || in_array($data[$field], self::$empty_values, true)) {
                 return false;
             }
         }
@@ -32,10 +26,10 @@ class ValidationHelper
         return true;
     }
 
-    public function requiredIfExists($data, $fields)
+    public static function requiredIfExists($data, $fields)
     {
         foreach ($fields as $field) {
-            if (isset($data[$field]) && in_array($data[$field], $this->empty_values, true)) {
+            if (isset($data[$field]) && in_array($data[$field], self::$empty_values, true)) {
                 return false;
             }
         }
