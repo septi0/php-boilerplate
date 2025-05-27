@@ -1,8 +1,8 @@
-# PHP Boilerplate
+# PHP Web Core
 
 ## Description
 
-A simple PHP Boilerplate to easily start a new project without external dependencies. It includes a basic structure and core classes to build on top of it.
+A simple PHP kickstarter to easily start a new project without external dependencies. It includes a basic structure and core classes to build on top of it.
 
 ## Features
 
