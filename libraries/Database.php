@@ -2,6 +2,8 @@
 
 class Database extends PDO
 {
+    private $transactions = 0;
+
     public function __construct($host, $port, $dbname, $user, $pass, $options = [])
     {
         $dsn = "mysql:dbname={$dbname};port={$port};host={$host}";
@@ -10,9 +12,12 @@ class Database extends PDO
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_STRINGIFY_FETCHES => true, // Not ideal, but needed for backwards compatibility with the old code
         ];
 
-        $init_commands = [];
+        $init_commands = [
+            "SET sql_mode=''", // Disable strict mode
+        ];
 
         if (isset($options['tz']) && $options['tz']) {
             $init_commands[] = 'SET time_zone = "' . $options['tz'] . '"';
@@ -23,6 +28,45 @@ class Database extends PDO
         }
 
         parent::__construct($dsn, $user, $pass, $options);
+    }
+
+    public function beginTransaction(): bool
+    {
+        $ret = true;
+
+        if ($this->transactions == 0) {
+            $ret = parent::beginTransaction();
+        }
+
+        $this->transactions++;
+
+        return $ret;
+    }
+
+    public function commit(): bool
+    {
+        $ret = true;
+
+        if ($this->transactions == 1) {
+            $ret = parent::commit();
+        }
+
+        $this->transactions--;
+
+        return $ret;
+    }
+
+    public function rollback(): bool
+    {
+        $ret = true;
+
+        if ($this->transactions == 1) {
+            $ret = parent::rollback();
+        }
+
+        $this->transactions--;
+
+        return $ret;
     }
 
     public function genInsertQuery($fields_allowed, $fields)
@@ -68,44 +112,70 @@ class Database extends PDO
     {
         $and_conditions = [];
         $data = [];
+        $memoized_def = [];
+        $operators = [
+            'EQ' => '=',
+            'LT' => '<',
+            'GT' => '>',
+            'LTE' => '<=',
+            'GTE' => '>=',
+            'NE' => '!=',
+        ];
 
-        foreach ($fields as $key => $values) {
-            if (!array_key_exists($key, $filters_definitions)) {
-                throw new Exception("Filter definition for $key not found");
+        foreach ($filters_definitions as $index => $def) {
+            if (!is_array($def)) {
+                $def = ['key' => $def];
             }
 
-            $filter_definition = $filters_definitions[$key];
+            if (!isset($def['key'])) {
+                throw new Exception("Invalid filter definition");
+            }
+
+            if (isset($memoized_def[$def['key']])) {
+                throw new Exception("Duplicate filter key {$def['key']}");
+            }
+
+            $memoized_def[$def['key']] = $index;
+            $filters_definitions[$index] = $def;
+        }
+
+        foreach ($fields as $key => $values) {
+            $operator = 'EQ';
+
+            if (strpos($key, ':') !== false) {
+                $key_parts = explode(':', $key, 2);
+                $key = $key_parts[0];
+                $operator = strtoupper($key_parts[1]);
+            }
+
+            if (!isset($operators[$operator])) {
+                throw new Exception("Invalid operator $operator for filter $key");
+            }
+
+            if (!isset($memoized_def[$key])) {
+                throw new Exception("Filter definition for filter $key not found");
+            }
+
+            $filter_definition = $filters_definitions[$memoized_def[$key]];
+            $field = $filter_definition['field'] ?? $key;
+
             if (!is_array($values)) $values = [$values];
 
             $or_conditions = [];
 
             foreach ($values as $index => $value) {
 
-                if (!$filter_definition) {
+                if (isset($filter_definition['expression'])) $expr = '(' . $filter_definition['expression'] . ')';
+                else $expr = $field;
 
                     if ($value === null) {
-                        $or_conditions[] = "{$key} IS NULL";
+                    if ($operator == 'EQ') $or_conditions[] = "{$expr} IS NULL";
+                    elseif ($operator == 'NE') $or_conditions[] = "{$expr} IS NOT NULL";
+                    else throw new Exception("Invalid operator $operator for filter $key with NULL value");
                     } else {
-                        $or_conditions[] = "{$key}=:{$key}_f{$index}";
-                        $data["{$key}_f{$index}"] = $value;
-                    }
-                } elseif (is_string($filter_definition)) {
-
-                    if (strpos($filter_definition, ':value') === false) {
-                        throw new Exception("Invalid filter definition for $key");
-                    }
-
-                    $or_conditions[] = str_replace(':value', ":{$key}_f{$index}", $filter_definition);
-                    $data["{$key}_f{$index}"] = $value;
-                } else if (is_array($filter_definition)) {
-
-                    if (!isset($filter_definition[$value])) {
-                        throw new Exception("Invalid value $value for filter $key");
-                    }
-
-                    if ($filter_definition[$value]) {
-                        $or_conditions[] = '(' . $filter_definition[$value] . ')';
-                    }
+                    $id = md5($key.$operator.$index.microtime(true));
+                    $or_conditions[] = "{$expr} {$operators[$operator]} :{$id}";
+                    $data["{$id}"] = $value;
                 }
             }
 

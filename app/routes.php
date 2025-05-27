@@ -1,5 +1,5 @@
 <?php
 
-$router->middleware('SessionMiddleware');
+$router->middleware(SessionMiddleware::class);
 
-$router->register('home', '/', 'GET', 'IndexCtrl');
+$router->register('home', '/', 'GET', IndexCtrl::class);
